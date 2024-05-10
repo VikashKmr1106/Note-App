@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dynamic Notes</title>
+<script src="https://kit.fontawesome.com/eb64514b22.js" crossorigin="anonymous"></script>
+<style>
+.note {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    overflow: hidden;
+}
+.close {
+    float: right;
+    cursor: pointer;
+}
+</style>
+</head>
+<body>
+<main>
+    <form id="noteForm">
+        <input type="color" id="color" value="#e6b905" />
+        <button type="button" class="addbtn" id="createBtn"> <i class="fas fa-plus"></i> Add Note</button>
+    </form>
+    <!-- note list  -->
+    <div id="list"></div>
+</main>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const createBtn = document.getElementById("createBtn");
+    const noteForm = document.getElementById("noteForm");
+    const noteList = document.getElementById("list");
+
+    // Load notes from local storage
+    const notes = JSON.parse(localStorage.getItem("notes")) || [];
+
+    // Function to save notes to local storage
+    function saveNotes() {
+        localStorage.setItem("notes", JSON.stringify(notes));
+    }
+
+    // Function to create a new note
+    function createNote() {
+        const color = document.getElementById("color").value;
+        const textarea = document.createElement("textarea");
+        textarea.placeholder = "Write Content...";
+        textarea.rows = "10";
+        textarea.cols = "30";
+        const note = document.createElement("div");
+        note.className = "note";
+        note.style.backgroundColor = color;
+        note.appendChild(textarea);
+
+        // Add close button
+        const closeBtn = document.createElement("span");
+        closeBtn.className = "close";
+        closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        closeBtn.onclick = function() {
+            noteList.removeChild(note);
+            notes.splice(notes.indexOf(note), 1);
+            saveNotes();
+        };
+        note.appendChild(closeBtn);
+
+        noteList.appendChild(note);
+        notes.push({ content: "", color: color });
+
+        // Save notes to local storage
+        saveNotes();
+
+        // Event listener for textarea
+        textarea.addEventListener("input", function() {
+            const index = notes.findIndex(item => item.color === color);
+            notes[index].content = textarea.value;
+            saveNotes();
+        });
+    }
+
+    // Event listener for create button
+    createBtn.addEventListener("click", createNote);
+
+    // Populate existing notes
+    notes.forEach(function(noteData) {
+        const note = document.createElement("div");
+        note.className = "note";
+        note.style.backgroundColor = noteData.color;
+        const textarea = document.createElement("textarea");
+        textarea.placeholder = "Write Content...";
+        textarea.rows = "10";
+        textarea.cols = "30";
+        textarea.value = noteData.content;
+        note.appendChild(textarea);
+
+        // Add close button
+        const closeBtn = document.createElement("span");
+        closeBtn.className = "close";
+        closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        closeBtn.onclick = function() {
+            noteList.removeChild(note);
+            notes.splice(notes.indexOf(note), 1);
+            saveNotes();
+        };
+        note.appendChild(closeBtn);
+
+        noteList.appendChild(note);
+
+        // Event listener for textarea
+        textarea.addEventListener("input", function() {
+            const index = notes.findIndex(item => item.color === noteData.color);
+            notes[index].content = textarea.value;
+            saveNotes();
+        });
+    });
+});
+</script>
+</body>
+</html>
+
+
+
+let color = document.getElementById('color');
+    let createBtn = document.getElementById('createBtn');
+    let list = document.getElementById('list');
+    // Initialize notes array
+    let notes = [];
+
+    // Function to save notes to local storage
+    function saveNotes() {
+        // Map notes to include content, color, and position
+        const notesData = notes.map(note => ({
+            content: note.content,
+            color: note.color,
+            position: {
+                x: note.dom.style.left,
+                y: note.dom.style.top
+            }
+        }));
+        localStorage.setItem('notes', JSON.stringify(notesData));
+    }
+
+    // Retrieve notes from local storage if available
+    const savedNotes = JSON.parse(localStorage.getItem('notes'));
+    if (savedNotes) {
+        notes = savedNotes;
+
+        // Loop through saved notes to recreate them with their positions
+        notes.forEach(noteData => {
+            let note = document.createElement('div');
+            note.classList.add('note');
+            note.style.borderTop = `30px solid ${noteData.color}`;
+            note.style.left = noteData.position.x;
+            note.style.top = noteData.position.y;
+            note.innerHTML = `
+                <span class="close">
+                    <i class="fas fa-times"></i>
+                </span>
+                <textarea placeholder="Write Content..." rows="10" cols="30" style="wrap: soft;">${noteData.content}</textarea>
+            `;
+
+            // Append note to list
+            list.appendChild(note);
+
+            const textarea = note.querySelector('textarea');
+            const closeBtn = note.querySelector('.close');
+
+            closeBtn.addEventListener('click', () => {
+                list.removeChild(note);
+                // Remove the corresponding note from the notes array
+                notes = notes.filter(item => item !== noteData);
+                saveNotes();
+            });
+
+            textarea.addEventListener('input', function () {
+                noteData.content = textarea.value;
+                saveNotes();
+            });
+        });
+    }
+
+    createBtn.addEventListener('click', (event) => {
+        let colorValue = color.value; // Retrieve color value inside the event listener
+
+        let note = document.createElement('div');
+        note.classList.add('note');
+        note.style.borderTop = `30px solid ${colorValue}`;
+        note.innerHTML = `
+            <span class="close">
+                    <i class="fas fa-times"></i>
+            </span>
+            <textarea placeholder="Write Content..." rows="10" cols="30" style="wrap: soft;"></textarea>
+        `;
+
+        list.appendChild(note);
+        color.value = '#e6b905';
+        let close = note.querySelector('.close');
+
+        close.addEventListener('click', () => {
+            list.removeChild(note);
+            // Remove the corresponding note from the notes array
+            notes = notes.filter(item => item.dom !== note);
+            saveNotes();
+        });
+
+        notes.unshift({ content: '', color: colorValue, dom: note });
+        saveNotes();
+
+        let textarea = note.querySelector('textarea');
+        textarea.addEventListener('input', function () {
+            const index = notes.findIndex((item) => item.dom === note);
+            notes[index].content = textarea.value;
+            saveNotes();
+        });
+    });
+
+    let cursor = {
+        x: null,
+        y: null
+    }
+
+    let note = {
+        dom: null,
+        x: null,
+        y: null
+    }
+
+    document.addEventListener('mousedown', (event) => {
+        if (event.target.classList.contains('note')) {
+            cursor = {
+                x: event.clientX,
+                y: event.clientY,
+            }
+            note = {
+                dom: event.target,
+                x: event.target.getBoundingClientRect().left,
+                y: event.target.getBoundingClientRect().top,
+            }
+        }
+    })
+
+    document.addEventListener('mousemove', (event) => {
+        if (note.dom == null) return;
+        let currentCursor = {
+            x: event.clientX,
+            y: event.clientY
+        }
+
+        let distance = {
+            x: currentCursor.x - cursor.x,
+            y: currentCursor.y - cursor.y
+        }
+
+        note.dom.style.left = (note.x + distance.x) + 'px';
+        note.dom.style.top = (note.y + distance.y) + 'px';
+        note.dom.style.cursor = 'grab';
+    })
+
+    document.addEventListener('mouseup', () => {
+        if (note.dom == null) return;
+        note.dom.style.cursor = 'auto';
+        note.dom = null;
+    })

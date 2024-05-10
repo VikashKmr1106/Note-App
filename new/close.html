@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multiple Draggable Boxes with Local Storage</title>
+<style>
+    .container {
+        position: relative;
+        width: 400px;
+        height: 400px;
+        border: 2px solid #ccc;
+    }
+    .box {
+        width: 50px;
+        height: 50px;
+        background-color: blue;
+        position: absolute;
+        cursor: move;
+    }
+    .close-icon {
+        position: absolute;
+        top: 0;
+        right: 0;
+        cursor: pointer;
+        color: white;
+        font-size: 20px;
+        padding: 5px;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+</style>
+</head>
+<body>
+
+<div class="container" id="container"></div>
+
+<script>
+// Get the container element
+var container = document.getElementById('container');
+
+// Function to save box positions to local storage
+function savePositions() {
+    var boxes = document.getElementsByClassName('box');
+    for (var i = 0; i < boxes.length; i++) {
+        var box = boxes[i];
+        localStorage.setItem('box' + i + 'X', box.style.left);
+        localStorage.setItem('box' + i + 'Y', box.style.top);
+    }
+}
+
+// Function to load box positions from local storage
+function loadPositions() {
+    var boxes = document.getElementsByClassName('box');
+    for (var i = 0; i < boxes.length; i++) {
+        var box = boxes[i];
+        var boxX = localStorage.getItem('box' + i + 'X');
+        var boxY = localStorage.getItem('box' + i + 'Y');
+        if (boxX && boxY) {
+            box.style.left = boxX;
+            box.style.top = boxY;
+        }
+    }
+}
+
+// Function to create a new draggable box
+function createBox() {
+    var box = document.createElement('div');
+    box.className = 'box';
+    box.style.left = '0px';
+    box.style.top = '0px';
+    
+    // Create close icon
+    var closeIcon = document.createElement('span');
+    closeIcon.className = 'close-icon';
+    closeIcon.innerHTML = '&times;';
+    box.appendChild(closeIcon);
+
+    container.appendChild(box);
+
+    // Variables to track the position of the mouse and the box
+    var offsetX, offsetY, isDragging = false;
+
+    // Function to handle mouse down event
+    function onMouseDown(event) {
+        isDragging = true;
+        // Calculate the offset between mouse position and box position
+        offsetX = event.clientX - box.offsetLeft;
+        offsetY = event.clientY - box.offsetTop;
+    }
+
+    // Function to handle mouse move event
+    function onMouseMove(event) {
+        if (isDragging) {
+            // Update the position of the box based on mouse position
+            box.style.left = (event.clientX - offsetX) + 'px';
+            box.style.top = (event.clientY - offsetY) + 'px';
+            // Save the positions to local storage
+            savePositions();
+        }
+    }
+
+    // Function to handle mouse up event
+    function onMouseUp(event) {
+        isDragging = false;
+    }
+
+    // Function to handle click on close icon
+    function onCloseIconClick() {
+        container.removeChild(box); // Remove the box from DOM
+        savePositions(); // Save positions after removing the box
+    }
+
+    // Event listeners
+    box.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+    closeIcon.addEventListener('click', onCloseIconClick);
+}
+
+// Event listener to create a new box when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    createBox();
+    loadPositions();
+});
+</script>
+
+</body>
+</html>

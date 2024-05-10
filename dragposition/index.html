@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Draggable Box with Local Storage</title>
+<style>
+    #box {
+        width: 100px;
+        height: 100px;
+        background-color: blue;
+        position: absolute;
+    }
+</style>
+</head>
+<body>
+
+<div id="box"></div>
+
+<script>
+	// Get the box element
+var box = document.getElementById('box');
+
+// Function to save box position to local storage
+function savePosition() {
+    localStorage.setItem('boxX', box.style.left);
+    localStorage.setItem('boxY', box.style.top);
+}
+
+// Function to load box position from local storage
+function loadPosition() {
+    var boxX = localStorage.getItem('boxX');
+    var boxY = localStorage.getItem('boxY');
+    if (boxX && boxY) {
+        box.style.left = boxX;
+        box.style.top = boxY;
+    }
+}
+
+// Variables to track the position of the mouse and the box
+var offsetX, offsetY, isDragging = false;
+
+// Function to handle mouse down event
+function onMouseDown(event) {
+    isDragging = true;
+    // Calculate the offset between mouse position and box position
+    offsetX = event.clientX - box.offsetLeft;
+    offsetY = event.clientY - box.offsetTop;
+}
+
+// Function to handle mouse move event
+function onMouseMove(event) {
+    if (isDragging) {
+        // Update the position of the box based on mouse position
+        box.style.left = (event.clientX - offsetX) + 'px';
+        box.style.top = (event.clientY - offsetY) + 'px';
+        // Save the position to local storage
+        savePosition();
+    }
+}
+
+// Function to handle mouse up event
+function onMouseUp(event) {
+    isDragging = false;
+}
+
+// Event listeners
+box.addEventListener('mousedown', onMouseDown);
+document.addEventListener('mousemove', onMouseMove);
+document.addEventListener('mouseup', onMouseUp);
+
+// Load box position from local storage when the page loads
+loadPosition();
+
+</script>
+</body>
+</html>
